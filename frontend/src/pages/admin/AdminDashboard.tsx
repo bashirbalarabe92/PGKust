@@ -47,7 +47,7 @@ export default function AdminDashboard() {
             <Link to={to} className="text-decoration-none">
               <div className={`card border-0 shadow-sm border-start border-4 border-${color} h-100`}>
                 <div className="card-body">
-                  <p className="text-muted small mb-1">{label}</p>
+                  <p className="text-muted small">{label}</p>
                   <span className={`fs-2 fw-bold text-${color}`}>{count}</span>
                 </div>
               </div>
