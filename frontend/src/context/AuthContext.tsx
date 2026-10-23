@@ -3,7 +3,6 @@ import {
   type ReactNode,
 } from "react";
 import { login as apiLogin, logout as apiLogout, getMe } from "../api/auth";
-import { clearAuthTokens } from "../api/client";
 import type { AuthUser } from "../types";
 
 interface AuthContextValue {
@@ -26,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await getMe();
       setUser(data);
     } catch {
-      clearAuthTokens();
+      localStorage.clear();
       setUser(null);
     } finally {
       setLoading(false);
@@ -39,20 +38,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await apiLogin(email, password);
     localStorage.setItem("access", data.access);
     localStorage.setItem("refresh", data.refresh);
-    try {
-      const me = await getMe();
-      setUser(me.data);
-      return me.data;
-    } catch (error) {
-      clearAuthTokens();
-      setUser(null);
-      throw error;
-    }
+    const me = await getMe();
+    setUser(me.data);
+    return me.data;
   };
 
   const logout = async () => {
     try { await apiLogout(localStorage.getItem("refresh") ?? ""); } catch { /* noop */ }
-    clearAuthTokens();
+    localStorage.clear();
     setUser(null);
   };
 

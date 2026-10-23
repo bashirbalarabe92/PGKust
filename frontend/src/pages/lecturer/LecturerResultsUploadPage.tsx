@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { getMyAllocations } from "../../api/courses";
 import { downloadScoreSheetTemplate, uploadResultsExcel } from "../../api/results";
@@ -38,21 +38,8 @@ export default function LecturerResultsUploadPage() {
 
   const allocation = allocations.find((a) => a.id === allocationId) ?? null;
 
-  async function apiErrorDetail(err: unknown): Promise<string | undefined> {
-    if (!isAxiosError(err) || !err.response) return undefined;
-    const data = err.response.data;
-    if (data instanceof Blob) {
-      try {
-        const text = await data.text();
-        const parsed = JSON.parse(text) as { detail?: string };
-        return parsed.detail ?? text;
-      } catch {
-        return undefined;
-      }
-    }
-    if (typeof data?.detail === "string") return data.detail;
-    if (data && typeof data === "object") return JSON.stringify(data);
-    return undefined;
+  function apiErrorDetail(err: unknown): string | undefined {
+    return isAxiosError<{ detail?: string }>(err) ? err.response?.data?.detail : undefined;
   }
 
   async function handleDownloadTemplate() {
@@ -75,7 +62,13 @@ export default function LecturerResultsUploadPage() {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (err) {
-      const detail = await apiErrorDetail(err);
+      let detail = apiErrorDetail(err);
+      // blob-typed requests deliver error JSON as a Blob — decode it
+      if (!detail && isAxiosError(err) && err.response?.data instanceof Blob) {
+        try {
+          detail = (JSON.parse(await err.response.data.text()) as { detail?: string }).detail;
+        } catch { /* not JSON — keep generic message */ }
+      }
       setError(detail ?? "Failed to download the score sheet template.");
     } finally {
       setDownloading(false);
@@ -97,8 +90,7 @@ export default function LecturerResultsUploadPage() {
       setFile(null);
       if (fileRef.current) fileRef.current.value = "";
     } catch (err) {
-      const detail = await apiErrorDetail(err);
-      setError(detail ?? "Upload failed. Check that the selected allocation is correct and the server is running.");
+      setError(apiErrorDetail(err) ?? "Upload failed. Make sure you used the downloaded template.");
     } finally {
       setUploading(false);
     }
@@ -108,7 +100,12 @@ export default function LecturerResultsUploadPage() {
 
   return (
     <div className="container py-4" style={{ maxWidth: 820 }}>
-       <h4 className="fw-bold mb-1 text-white">Upload Results</h4>
+      <nav aria-label="breadcrumb" className="mb-3">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item"><Link to="/lecturer/dashboard">Dashboard</Link></li>
+          <li className="breadcrumb-item active">Upload Results</li>
+        </ol>
+      </nav>
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
 

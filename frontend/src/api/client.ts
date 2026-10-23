@@ -5,15 +5,7 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-export const clearAuthTokens = () => {
-  localStorage.removeItem("access");
-  localStorage.removeItem("refresh");
-};
-
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (config.data instanceof FormData) {
-    delete config.headers["Content-Type"];
-  }
   const token = localStorage.getItem("access");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
@@ -29,7 +21,6 @@ api.interceptors.response.use(
       original._retry = true;
       const refresh = localStorage.getItem("refresh");
       if (!refresh) {
-        clearAuthTokens();
         window.location.href = "/login";
         return Promise.reject(err);
       }
@@ -42,7 +33,7 @@ api.interceptors.response.use(
         original.headers.Authorization = `Bearer ${data.access}`;
         return api(original);
       } catch {
-        clearAuthTokens();
+        localStorage.clear();
         window.location.href = "/login";
         return Promise.reject(err);
       }

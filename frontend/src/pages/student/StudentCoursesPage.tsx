@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { isAxiosError } from "axios";
-import { getMyEnrollments, getMaterials } from "../../api/courses";
+import { getMyEnrollments, getMaterials, downloadMaterial } from "../../api/courses";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import type { Enrollment, CourseMaterial } from "../../types";
 
@@ -67,14 +67,13 @@ function CourseMaterialsRow({ allocationId }: { allocationId: number }) {
               })}
             </span>
           </div>
-          <a
-            href={m.file}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             className="btn btn-sm btn-outline-primary"
+            onClick={() => { downloadMaterial(m).catch(() => alert("Download failed.")); }}
           >
             Download
-          </a>
+          </button>
         </li>
       ))}
     </ul>
@@ -84,13 +83,11 @@ function CourseMaterialsRow({ allocationId }: { allocationId: number }) {
 export default function StudentCoursesPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
     getMyEnrollments()
       .then(({ data }) => setEnrollments(data))
-      .catch(() => setError("Failed to load your courses. Please try again."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -107,17 +104,15 @@ export default function StudentCoursesPage() {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h4 className="fw-bold mb-0 text-white">My Courses</h4>
-          <p className="text-white small mb-0">
+          <h4 className="fw-bold mb-0">My Courses</h4>
+          <p className="text-muted small mb-0">
             {approved.length} approved &middot; {others.length} pending / rejected
           </p>
         </div>
-        <Link to="/student/dashboard" className="btn btn-outline-secondary btn-sm text-white">← Dashboard</Link>
+        <Link to="/student/dashboard" className="btn btn-outline-secondary btn-sm">← Dashboard</Link>
       </div>
 
-      {error ? (
-        <div className="alert alert-danger">{error}</div>
-      ) : enrollments.length === 0 ? (
+      {enrollments.length === 0 ? (
         <div className="alert alert-info">
           You are not enrolled in any courses yet. Contact the admin to get enrolled.
         </div>

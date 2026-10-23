@@ -1,7 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
 from .models import SemesterResultBatch, Result, SemesterGPA, CumulativeGPA
-from .services import get_batch_progress
 
 
 class ResultSerializer(serializers.ModelSerializer):
@@ -26,22 +25,18 @@ class ResultUploadSerializer(serializers.Serializer):
 class SemesterResultBatchSerializer(serializers.ModelSerializer):
     session_name = serializers.CharField(source="session.name", read_only=True)
     approved_by_name = serializers.SerializerMethodField()
-    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = SemesterResultBatch
         fields = ["id", "session", "session_name", "semester", "programme_type",
                   "status", "coordinator_comment", "approved_at", "approved_by",
-              "approved_by_name", "created_at", "progress"]
+                  "approved_by_name", "created_at"]
         read_only_fields = ["id", "session_name", "approved_by_name", "created_at"]
 
     def get_approved_by_name(self, obj):
         if obj.approved_by:
             return obj.approved_by.get_full_name()
         return None
-
-    def get_progress(self, obj):
-        return get_batch_progress(obj)
 
 
 class SemesterGPASerializer(serializers.ModelSerializer):
