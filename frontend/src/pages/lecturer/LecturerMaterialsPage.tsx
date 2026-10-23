@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getMyAllocations, getMaterials, uploadMaterial, downloadMaterial } from "../../api/courses";
+import { getMyAllocations, getMaterials, uploadMaterial } from "../../api/courses";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import type { CourseAllocation, CourseMaterial } from "../../types";
 
@@ -77,10 +77,7 @@ export default function LecturerMaterialsPage() {
   return (
     <div className="container py-4" style={{ maxWidth: 800 }}>
       <nav aria-label="breadcrumb" className="mb-3">
-        <ol className="breadcrumb">
-          <li className="breadcrumb-item"><Link to="/lecturer/dashboard">Dashboard</Link></li>
-          <li className="breadcrumb-item active">Course Materials</li>
-        </ol>
+       <h4 className="fw-bold mb-0 text-white">Course Materials</h4>
       </nav>
 
       <div className="card border-0 shadow-sm mb-4">
@@ -160,13 +157,14 @@ export default function LecturerMaterialsPage() {
                     })}
                   </div>
                 </div>
-                <button
-                  type="button"
+                <a
+                  href={m.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn btn-sm btn-outline-primary"
-                  onClick={() => { downloadMaterial(m).catch(() => alert("Download failed.")); }}
                 >
                   Download
-                </button>
+                </a>
               </li>
             ))}
           </ul>
