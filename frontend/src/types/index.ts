@@ -157,6 +157,8 @@ export interface CourseMaterial {
   allocation: number;
   title: string;
   file: string;
+  description: string;
+  file_available: boolean;
   uploaded_at: string;
 }
 

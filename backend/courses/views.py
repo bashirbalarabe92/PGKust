@@ -103,6 +103,27 @@ class StudentEnrollmentListView(APIView):
         return Response(EnrollmentSerializer(qs, many=True).data)
 
 
+class StudentDropEnrollmentView(APIView):
+    permission_classes = [IsActiveStudent]
+
+    def delete(self, request, pk):
+        try:
+            enrollment = Enrollment.objects.get(
+                pk=pk, student=request.user.student_profile
+            )
+        except Enrollment.DoesNotExist:
+            return Response({"detail": "Enrollment not found."}, status=404)
+
+        if enrollment.status != Enrollment.Status.APPROVED:
+            return Response(
+                {"detail": "Only approved enrollments can be dropped."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        enrollment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class LecturerAllocationListView(APIView):
     permission_classes = [IsActiveLecturer]
 
@@ -163,10 +184,30 @@ class MaterialUploadView(APIView):
 
         material = CourseMaterial.objects.create(
             allocation=allocation,
+            uploader=request.user.lecturer_profile,
             title=request.data.get("title", upload.name),
             file=upload,
+            description=request.data.get("description", "").strip(),
         )
         return Response(CourseMaterialSerializer(material).data, status=status.HTTP_201_CREATED)
+
+
+class MaterialDeleteView(APIView):
+    permission_classes = [IsActiveLecturer]
+
+    def delete(self, request, allocation_pk, material_pk):
+        try:
+            material = CourseMaterial.objects.get(
+                pk=material_pk,
+                allocation_id=allocation_pk,
+                uploader=request.user.lecturer_profile,
+            )
+        except CourseMaterial.DoesNotExist:
+            return Response({"detail": "Material not found."}, status=404)
+
+        material.file.delete(save=False)
+        material.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MaterialListView(APIView):

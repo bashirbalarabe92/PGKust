@@ -140,6 +140,7 @@ def material_upload_path(instance, filename):
 
 class CourseMaterial(models.Model):
     allocation = models.ForeignKey(CourseAllocation, on_delete=models.CASCADE, related_name='materials')
+    uploader = models.ForeignKey(LecturerProfile, on_delete=models.CASCADE, related_name='uploaded_materials')
     title = models.CharField(max_length=200)
     file = models.FileField(upload_to=material_upload_path)
     description = models.TextField(blank=True)

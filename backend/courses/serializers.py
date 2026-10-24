@@ -103,7 +103,12 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 
 
 class CourseMaterialSerializer(serializers.ModelSerializer):
+    file_available = serializers.SerializerMethodField()
+
     class Meta:
         model = CourseMaterial
-        fields = ["id", "allocation", "title", "file", "uploaded_at"]
+        fields = ["id", "allocation", "title", "file", "description", "file_available", "uploaded_at"]
         read_only_fields = ["id", "uploaded_at"]
+
+    def get_file_available(self, obj):
+        return bool(obj.file and obj.file.storage.exists(obj.file.name))
