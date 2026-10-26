@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from accounts.permissions import IsAdmin, IsActiveStudent, IsActiveLecturer
-from fees.models import FeePayment
 from notifications.utils import notify
 from .models import AcademicSession, Course, CourseAllocation, Timetable, Enrollment, CourseMaterial
 from .serializers import (
@@ -225,15 +224,6 @@ class MaterialListView(APIView):
                 student=profile, allocation=allocation, status="APPROVED"
             ).exists():
                 return Response({"detail": "Not enrolled."}, status=403)
-            session_name = allocation.session.name
-            if not FeePayment.objects.filter(
-                student=profile, academic_year=session_name, status="APPROVED"
-            ).exists():
-                return Response(
-                    {"detail": f"You are not registered for the {session_name} session. "
-                               "Complete your session registration (fee payment) to access materials."},
-                    status=403,
-                )
         elif request.user.is_lecturer:
             lecturer = getattr(request.user, "lecturer_profile", None)
             if lecturer is None or not lecturer.is_active or allocation.lecturer_id != lecturer.id:

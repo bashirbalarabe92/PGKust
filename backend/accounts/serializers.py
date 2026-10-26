@@ -31,6 +31,8 @@ class PGMSTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Rejects login for students/lecturers whose registration is not yet approved."""
 
     def validate(self, attrs):
+        if self.username_field == CustomUser.EMAIL_FIELD:
+            attrs[self.username_field] = attrs[self.username_field].strip().lower()
         data = super().validate(attrs)
         user = self.user
         if user.role == CustomUser.Role.STUDENT:

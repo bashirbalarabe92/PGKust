@@ -1,5 +1,5 @@
 from django.test import TestCase
-from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from unittest.mock import patch
 
 from .models import AdminProfile, CustomUser, LecturerProfile, StudentProfile
@@ -189,3 +189,16 @@ class StudentStatusTests(AdminAssignSupervisorTests):
         refresh = PGMSTokenRefreshSerializer(
             data={'refresh': str(RefreshToken.for_user(student.user))})
         self.assertTrue(refresh.is_valid())
+
+    def test_approved_student_can_login_with_mixed_case_email(self):
+        student = self.create_student(StudentProfile.Programme.MSC)
+        student.status = StudentProfile.Status.ACTIVE
+        student.save(update_fields=['status'])
+
+        response = APIClient().post('/api/auth/login/', {
+            'email': 'MSC@EXAMPLE.COM',
+            'password': 'test-password',
+        })
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertIn('access', response.data)
